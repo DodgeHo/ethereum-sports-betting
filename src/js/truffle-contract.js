@@ -25,7 +25,7 @@ var contract = (function(module) {
     return this.provider.sendAsync.apply(this.provider, arguments);
   };
 
-  var BigNumber = (new Web3()).toBigNumber(0).constructor;
+  var BigNumber = Web3.utils.BN;
 
   var Utils = {
     is_object: function(val) {
@@ -124,17 +124,23 @@ var contract = (function(module) {
         tx_params = Utils.merge(C.class_defaults, tx_params);
 
         return C.detectNetwork().then(function() {
-          return new Promise(function(accept, reject) {
-            var callback = function(error, result) {
-              if (error != null) {
-                reject(error);
-              } else {
-                accept(result);
-              }
-            };
-            args.push(tx_params, callback);
-            fn.apply(instance.contract, args);
-          });
+            return new Promise(function(accept, reject) {
+                var callback = function(error, result) {
+                    if (error != null) {
+                        console.error("Error calling contract method:", error);
+                        reject(error);
+                    } else {
+                        accept(result);
+                    }
+                };
+                args.push(tx_params, callback);
+                try {
+                    fn.apply(instance.contract, args);
+                } catch (error) {
+                    console.error("Error applying contract method:", error);
+                    reject(error);
+                }
+            });
         });
       };
     },
@@ -255,8 +261,8 @@ var contract = (function(module) {
 
     if (typeof contract == "string") {
       var address = contract;
-      var contract_class = constructor.web3.eth.contract(this.abi);
-      contract = contract_class.at(address);
+      var contract_class = new constructor.web3.eth.Contract(this.abi, address);
+      contract = contract_class;
     }
 
     this.contract = contract;
@@ -270,11 +276,12 @@ var contract = (function(module) {
         } else {
           this[item.name] = Utils.synchronizeFunction(contract[item.name], this, constructor);
         }
-
-        this[item.name].call = Utils.promisifyFunction(contract[item.name].call, constructor);
-        this[item.name].sendTransaction = Utils.promisifyFunction(contract[item.name].sendTransaction, constructor);
-        this[item.name].request = contract[item.name].request;
-        this[item.name].estimateGas = Utils.promisifyFunction(contract[item.name].estimateGas, constructor);
+        if (contract[item.name] && typeof contract[item.name].call === 'function') {
+          this[item.name].call = Utils.promisifyFunction(contract[item.name].call, constructor);
+          this[item.name].sendTransaction = Utils.promisifyFunction(contract[item.name].sendTransaction, constructor);
+          this[item.name].request = contract[item.name].request;
+          this[item.name].estimateGas = Utils.promisifyFunction(contract[item.name].estimateGas, constructor);
+        }
       }
 
       if (item.type == "event") {
@@ -303,14 +310,34 @@ var contract = (function(module) {
   };
 
   Contract._static_methods = {
-    setProvider: function(provider) {
+    setProvider: async function(provider) {
       if (!provider) {
         throw new Error("Invalid provider passed to setProvider(); provider is " + provider);
       }
 
       var wrapped = new Provider(provider);
       this.web3.setProvider(wrapped);
-      this.currentProvider = provider;
+      
+      if (window.ethereum) {
+          this.currentProvider = window.ethereum;
+          web3 = new Web3(window.ethereum);
+          try {
+              // Request account access if needed
+              await window.ethereum.request({ method: 'eth_requestAccounts' });
+          } catch (error) {
+              // User denied account access...
+              console.error("User denied account access");
+          }
+      } else if (window.web3) {
+          // Legacy dapp browsers...
+          this.currentProvider = window.web3.currentProvider;
+          web3 = new Web3(window.web3.currentProvider);
+      } else {
+          // If no injected web3 instance is detected, fall back to Ganache
+          this.currentProvider = new Web3.providers.HttpProvider('http://localhost:7545');
+          web3 = new Web3(this.currentProvider);
+      }
+      
     },
 
     new: function() {
@@ -398,16 +425,23 @@ var contract = (function(module) {
 
           return new Promise(function(accept, reject) {
             self.web3.eth.getCode(address, function(err, code) {
-              if (err) return reject(err);
+              if (err) {
+                console.error("Error getting contract code:", err);
+                return reject(err);
+              }
 
               if (!code || new BigNumber(code).eq(0)) {
-                return reject(new Error("Cannot create instance of " + self.contract_name + "; no code at address " + address));
+                var errorMsg = "Cannot create instance of " + self.contract_name + "; no code at address " + address;
+                console.error(errorMsg);
+                return reject(new Error(errorMsg));
               }
 
               accept(instance);
             });
           });
-        }).then(fn);
+        }).then(fn).catch(function(error) {
+          console.error("Error in contract.then:", error);
+        });
       };
 
       return contract;
@@ -472,56 +506,61 @@ var contract = (function(module) {
     },
 
     detectNetwork: function() {
-      var self = this;
+        var self = this;
 
-      return new Promise(function(accept, reject) {
-        // Try to detect the network we have artifacts for.
-        if (self.network_id) {
-          // We have a network id and a configuration, let's go with it.
-          if (self.networks[self.network_id] != null) {
-            return accept(self.network_id);
-          }
-        }
-
-        self.web3.version.getNetwork(function(err, result) {
-          if (err) return reject(err);
-
-          var network_id = result.toString();
-
-          // If we found the network via a number, let's use that.
-          if (self.hasNetwork(network_id)) {
-            self.setNetwork(network_id);
-            return accept();
-          }
-
-          // Otherwise, go through all the networks that are listed as
-          // blockchain uris and see if they match.
-          var uris = Object.keys(self._json.networks).filter(function(network) {
-            return network.indexOf("blockchain://") == 0;
-          });
-
-          var matches = uris.map(function(uri) {
-            return BlockchainUtils.matches.bind(BlockchainUtils, uri, self.web3.currentProvider);
-          });
-
-          Utils.parallel(matches, function(err, results) {
-            if (err) return reject(err);
-
-            for (var i = 0; i < results.length; i++) {
-              if (results[i]) {
-                self.setNetwork(uris[i]);
-                return accept();
-              }
+        return new Promise(function(accept, reject) {
+            // Try to detect the network we have artifacts for.
+            if (self.network_id) {
+                // We have a network id and a configuration, let's go with it.
+                if (self.networks[self.network_id] != null) {
+                    return accept(self.network_id);
+                }
             }
 
-            // We found nothing. Set the network id to whatever the provider states.
-            self.setNetwork(network_id);
+            self.web3.eth.net.getId(function(err, result) {
+                if (err) {
+                    console.error("Error getting network ID:", err);
+                    return reject(err);
+                }
 
-            accept();
-          });
+                var network_id = result.toString();
 
+                // If we found the network via a number, let's use that.
+                if (self.hasNetwork(network_id)) {
+                    self.setNetwork(network_id);
+                    return accept(network_id);
+                }
+
+                // Otherwise, go through all the networks that are listed as
+                // blockchain uris and see if they match.
+                var uris = Object.keys(self._json.networks).filter(function(network) {
+                    return network.indexOf("blockchain://") == 0;
+                });
+
+                var matches = uris.map(function(uri) {
+                    return BlockchainUtils.matches.bind(BlockchainUtils, uri, self.web3.currentProvider);
+                });
+
+                Utils.parallel(matches, function(err, results) {
+                    if (err) {
+                        console.error("Error matching blockchain URIs:", err);
+                        return reject(err);
+                    }
+
+                    for (var i = 0; i < results.length; i++) {
+                        if (results[i]) {
+                            self.setNetwork(uris[i]);
+                            return accept(uris[i]);
+                        }
+                    }
+
+                    // We found nothing. Set the network id to whatever the provider states.
+                    self.setNetwork(network_id);
+
+                    accept(network_id);
+                });
+            });
         });
-      });
     },
 
     setNetwork: function(network_id) {
@@ -869,6 +908,13 @@ module.exports = contract;
 if (typeof window !== "undefined") {
   window.TruffleContract = contract;
 }
+
+
+TruffleContract.prototype.constructor = function(web3) {
+  this.web3 = web3;
+  this.contract = new this.web3.eth.Contract(this.abi);
+};
+
 
 },{"./contract.js":1,"truffle-contract-schema":16}],3:[function(require,module,exports){
 'use strict'

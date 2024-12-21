@@ -11,81 +11,80 @@
 		<link href="css/bootstrap.min.css" rel="stylesheet">
 		<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/10.6.2/css/bootstrap-slider.min.css" rel="stylesheet">
 
-		<link href="https://fonts.googleapis.com/css?family=Montserrat&display=swap" rel="stylesheet"> 
+		<link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet"> 
+		<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+		<link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
 	</head>
 
 	<body>
 		<div id="accountAddress"></div>
 		<div class="container">
 			<div class="row">
-				<h1 class="text-center">FortunEther</h1>
-			</div>  
-			<div id="openBets" class="row"><h3 class="text-center">Open Bets</h3>
-				<hr>
-				<br>
-				<div class="text-center">In a bet there is a fool and a thief. Discover who you are</div><br><br>
-				<!-- <input id="betValue" type="range" start=1 min=1 max=100 value="1"> -->
-				<div class="text-center"><input id="betValue" data-slider-id="betValue" type="text" data-slider-min="1" data-slider-max="200" data-slider-step="1" data-slider-value="1"/></div><br>
-			</div>
-			
-			<div id="myBets" class="row"><h3 class="text-center">My Bets</h3>
-				<hr>
-				<br>
-			</div>
-			
-			<div id="payoutABet" class="row"><h3 class="text-center">Start Payout</h3>
-				<hr>
-				<br>
-			</div>
-
-			<!-- Add a Bet -->
-			<div class="row" id="addABet"> 
-				<div class="col-xs-12 col-sm-8 col-sm-push-2">
-
-					<h3 class="text-center">Add Bet</h3>
-					<hr>
-					<br>
-					<form onSubmit="App.addBet(); return false;">
-						<div class="form-group">
-							<label for="text">Title</label>
-							<input type="text" class="form-control" id="question" value="Tigers vs Bulldogs">
-						</div>
-						<div class="form-group">
-							<div class="row">
-								<div class="col-md-6">
-									<label for="text">Option</label>
-									<input type="text" class="moneyLineOption form-control" value="Tigers">
-								</div>
-								<div class="col-md-6">
-									<label for="number">Moneyline value</label>
-									<input type="number" class="moneyLineValue form-control" value=105>
-								</div>
-							</div>
-						</div>
-
-						<div class="form-group">
-							<div class="row">
-								<div class="col-md-6">
-									<label for="text">Option</label>
-									<input type="text" class="moneyLineOption form-control" value="Bulldogs">
-								</div>
-								<div class="col-md-6">
-									<label for="number">Moneyline value</label>
-									<input type="number" class="moneyLineValue form-control" value="-140">
-								</div>
-							</div>
-						</div>
-						<div class="text-center">
-							<button type="submit" class="btn btn-primary">Add</button>
-						</div>
-						<hr/>
-					</form>
+				<div class="col-md-6">
+					<h1 class="text-center animate__animated animate__bounce" style="color: #00FF00;">FortunEther</h1>
+					<div id="openBets">
+						<h3 class="text-center animate__animated animate__fadeIn" style="color: #00FF00;">Open Bets</h3>
+						<hr>
+						<br>
+						<div class="text-center" style="color: #00FF00;">In a bet there is a fool and a thief. Discover who you are</div><br><br>
+						<div class="text-center"><input id="betValue" data-slider-id="betValue" type="text" data-slider-min="1" data-slider-max="200" data-slider-step="1" data-slider-value="1"/></div><br>
+					</div>
+					<div id="myBets">
+						<h3 class="text-center animate__animated animate__fadeIn" style="color: #00FF00;">My Bets</h3>
+						<hr>
+						<br>
+					</div>
+					<div id="payoutABet">
+						<h3 class="text-center animate__animated animate__fadeIn" style="color: #00FF00;">Start Payout</h3>
+						<hr>
+						<br>
+					</div>
 				</div>
-			</div>
+				<div class="col-md-6">
+					<div id="addABet">
+						<h3 class="text-center animate__animated animate__fadeIn" style="color: #00FF00;">Add Bet</h3>
+						<hr>
+						<br>
+						<form onSubmit="App.addBet(); return false;">
+							<div class="form-group">
+								<label for="text">Title</label>
+								<input type="text" class="form-control" id="question" value="Tigers vs Bulldogs">
+							</div>
+							<div class="form-group">
+								<div class="row">
+									<div class="col-md-6">
+										<label for="text">Option</label>
+										<input type="text" class="moneyLineOption form-control" value="Tigers">
+									</div>
+									<div class="col-md-6">
+										<label for="number">Moneyline value</label>
+										<input type="number" class="moneyLineValue form-control" value=105>
+									</div>
+								</div>
+							</div>
 
-			<!-- Redeem -->
-			<div id="redeem" class="row text-center">
-				
+							<div class="form-group">
+								<div class="row">
+									<div class="col-md-6">
+										<label for="text">Option</label>
+										<input type="text" class="moneyLineOption form-control" value="Bulldogs">
+									</div>
+									<div class="col-md-6">
+										<label for="number">Moneyline value</label>
+										<input type="number" class="moneyLineValue form-control" value="-140">
+									</div>
+								</div>
+							</div>
+							<div class="text-center">
+								<button type="submit" class="btn btn-primary">Add</button>
+							</div>
+							<hr/>
+						</form>
+					</div>
+					<div id="redeem" class="text-center">
+						
+					</div>
+				</div>
 			</div>
 		</div>
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
@@ -139,9 +138,17 @@
 		<style type="text/css">
 
 			body{
-				font-family: 'Montserrat', sans-serif;
-				background-color: #22242A;
+				font-family: 'Roboto', sans-serif;
+				background: linear-gradient(135deg, #1e3c72, #2a5298);
 				color: #FFFFFF;
+				animation: gradient 15s ease infinite;
+				background-size: 400% 400%;
+			}
+
+			@keyframes gradient {
+				0% { background-position: 0% 50%; }
+				50% { background-position: 100% 50%; }
+				100% { background-position: 0% 50%; }
 			}
 
 			#accountAddress{
@@ -155,13 +162,36 @@
 			.bet-card{
 				box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
 				padding: 20px;
-				background-color: #363D46;
+				background-color: #2a5298;
 				margin-bottom: 10px;
+				border-radius: 10px;
+				transition: transform 0.2s;
+			}
+
+			.bet-card:hover {
+				transform: scale(1.05);
 			}
 
 			.bet-option{
 				float: right;
 				margin: 5px;
+				color: #00FF00;
+				cursor: pointer;
+			}
+
+			.bet-option:hover {
+				color: #00CC00;
+			}
+
+			.btn-primary {
+				background-color: #00FF00;
+				border-color: #00FF00;
+				color: #000;
+			}
+
+			.btn-primary:hover {
+				background-color: #00CC00;
+				border-color: #00CC00;
 			}
 		</style>
 	</body>

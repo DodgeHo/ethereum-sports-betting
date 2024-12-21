@@ -9,12 +9,25 @@ App = {
 	},
 
 	initWeb3: async function() {
-		if (typeof web3 !== 'undefined') {
-			// If a web3 instance is already provided by Meta Mask.
-			App.web3Provider = web3.currentProvider;
-			web3 = new Web3(web3.currentProvider);
+		if (window.ethereum) {
+			// If a web3 instance is already provided by MetaMask.
+			App.web3Provider = window.ethereum;
+			web3 = new Web3(window.ethereum);
+			try {
+				// Request account access if needed
+				await window.ethereum.request({ method: 'eth_requestAccounts' });
+				const accounts = await web3.eth.getAccounts();
+				App.account = accounts[0];
+			} catch (error) {
+				// User denied account access...
+				console.error("User denied account access");
+			}
+		} else if (window.web3) {
+			// Legacy dapp browsers...
+			App.web3Provider = window.web3.currentProvider;
+			web3 = new Web3(window.web3.currentProvider);
 		} else {
-			// Specify default instance if no web3 instance provided
+			// If no injected web3 instance is detected, fall back to Ganache
 			App.web3Provider = new Web3.providers.HttpProvider('http://localhost:7545');
 			web3 = new Web3(App.web3Provider);
 		}
@@ -33,11 +46,11 @@ App = {
 	// return App.bindEvents();
 	},
 
-	render: function(){
+	render: function() {
 		var loader = $("#loader");
-    	var content = $("#content");
+		var content = $("#content");
 		web3.eth.getCoinbase(function(err, account) {
-			if(err === null){
+			if (err === null) {
 				App.account = account;
 				$("#accountAddress").html("Current account: " + account);
 			}
@@ -239,8 +252,8 @@ App = {
 		return html;
 	},
 
-	getBalance: function(){
-		// implemented before
+	getBalance: function() {
+		// Implementation for fetching and displaying user's balance
 	},
 
 	redeem: function(){

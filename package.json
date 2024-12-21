@@ -13,11 +13,10 @@
   },
   "author": "",
   "license": "ISC",
-  "devDependencies": {
-    
-  },
   "dependencies": {
+    "lite-server": "^2.3.0",
+    "truffle-contract": "^4.0.31",
     "truffle-hdwallet-provider": "^1.0.17",
-    "lite-server": "^2.3.0"
+    "web3": "^4.16.0"
   }
 }
